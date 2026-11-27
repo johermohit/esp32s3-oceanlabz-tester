@@ -171,25 +171,33 @@ static void setHunt() {
   while (NHUNT < 10) { int v = Serial.parseInt(); if (!v && Serial.peek() < 0) break; HUNT[NHUNT++] = v; if (Serial.peek() == '\n' || Serial.peek() < 0) break; }
   Serial.printf("hunt pins (%d):", NHUNT); for (int i = 0; i < NHUNT; i++) Serial.printf(" %d", HUNT[i]); Serial.println();
 }
-// q: try known presets one by one, each 3 s. Panel prints which preset it was.
+// q = list presets. q1, q2, ... = run ONLY that preset and leave it on screen (it also becomes the pins used by d).
+struct Preset { const char* n; int bl, clk, mosi, dc, cs, rst; };
+static const Preset PRESETS[] = {
+  {"expansion-v1.2", 42, 44, 43, 38, 45,  1},   // OceanLabz Expansion Board guide
+  {"tutorial-cam",   38, 19, 20, 47, 45, 21},   // OceanLabz XiaoZhi camera-board tutorial
+  {"AIExplorer-h",   44, 38, 42,  1, 45, 43},   // OceanLabz AI Explorer repo header
+  {"xiaozhi-lcd",    42, 21, 47, 40, 41, 45},   // upstream XiaoZhi bread-compact-wifi-lcd
+};
 void presets() {
-  struct P { const char* n; int bl, clk, mosi, dc, cs, rst; };
-  static const P L[] = {
-    {"expansion-v1.2", 42, 44, 43, 38, 45,  1},
-    {"tutorial-cam",  38, 19, 20, 47, 45, 21},
-    {"AIExplorer-h",  44, 38, 42,  1, 45, 43},
-    {"xiaozhi-lcd",  42, 21, 47, 40, 41, 45},
-  };
-  for (auto& p : L) {
-    Serial.printf("preset %s: BL=%d CLK=%d MOSI=%d DC=%d CS=%d RST=%d\n", p.n, p.bl, p.clk, p.mosi, p.dc, p.cs, p.rst); Serial.flush();
-    tftDraw(p.clk, p.mosi, p.dc, p.rst, p.cs, p.bl, 300, p.n);
-    delay(2500);
-    Serial.end(); Serial.begin(115200);
+  int n = sizeof(PRESETS) / sizeof(PRESETS[0]);
+  int k = Serial.parseInt();
+  if (k < 1 || k > n) {
+    Serial.println("Presets (type q<number> + Enter, e.g. q1):");
+    for (int i = 0; i < n; i++) { const Preset& p = PRESETS[i];
+      Serial.printf("  %d  %-15s BL=%d CLK=%d MOSI=%d DC=%d CS=%d RST=%d\n", i + 1, p.n, p.bl, p.clk, p.mosi, p.dc, p.cs, p.rst); }
+    return;
   }
-  Serial.println("presets done. Which one lit the panel? (none => offset/other pins: use P and p)");
+  const Preset& p = PRESETS[k - 1];
+  Serial.printf("Running preset %d (%s): BL=%d CLK=%d MOSI=%d DC=%d CS=%d RST=%d. Watch the screen.\n", k, p.n, p.bl, p.clk, p.mosi, p.dc, p.cs, p.rst);
+  Serial.flush();
+  TFT_BL = p.bl; TFT_SCK = p.clk; TFT_MOSI = p.mosi; TFT_DC = p.dc; TFT_CS = p.cs; TFT_RST = p.rst;
+  tftDraw(p.clk, p.mosi, p.dc, p.rst, p.cs, p.bl, 1000, p.n);   // red, green, blue, white (1s each), then name + pins stay on screen
+  Serial.end(); Serial.begin(115200);
+  Serial.printf("Done preset %d. Did the screen show colours and the text '%s'? If yes this is your wiring.\n", k, p.n);
 }
 
-void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, b=backlight hunt, p=TFT pin hunt (hold BOOT to stop), B<pin>=set BL pin (-1 unknown), q=try presets, T bl clk mosi dc cs rst=set TFT pins, P pins...=set hunt pins, h=help"); }
+void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, b=backlight hunt, p=TFT pin hunt (hold BOOT to stop), B<pin>=set BL pin (-1 unknown), q=list presets / q<n>=run one, T bl clk mosi dc cs rst=set TFT pins, P pins...=set hunt pins, h=help"); }
 
 void setup() { Serial.begin(115200); delay(1500); Serial.println("OceanLabz S3 POC"); help(); }
 
