@@ -1,0 +1,8 @@
+{
+  "name": "OceanLabz S3 Hardware POC",
+  "version": "0.1.0",
+  "new_install_prompt_erase": false,
+  "builds": [
+    { "chipFamily": "ESP32-S3", "parts": [ { "path": "firmware-merged.bin", "offset": 0 } ] }
+  ]
+}

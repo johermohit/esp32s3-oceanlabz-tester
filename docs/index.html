@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S3 Board Tester</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.0.1/dist/web/install-button.js?module"></script>
+<style>
+:root{--bg:#f6f7f9;--fg:#15181d;--card:#fff;--line:#d9dde3;--acc:#0b6bcb}
+@media (prefers-color-scheme:dark){:root{--bg:#101318;--fg:#e8ebf0;--card:#181c23;--line:#2b313b;--acc:#5aa2f0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}p.sub{margin:0 0 20px;opacity:.7}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 10px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}button:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+pre{margin:12px 0 0;height:300px;overflow:auto;background:#0b0e12;color:#cfe3ff;padding:10px;border-radius:8px;font:13px/1.4 ui-monospace,Consolas,monospace;white-space:pre-wrap}
+small{opacity:.7;display:block;margin-top:8px}
+</style></head><body><main>
+<h1>OceanLabz ESP32-S3 board tester</h1>
+<p class="sub">Flash the test firmware, then poke the OLED, mic, amp and TFT from your browser. Chrome or Edge only (Web Serial).</p>
+
+<section><h2>1 · Flash</h2>
+<esp-web-tools-install-button manifest="manifest.json"><button slot="activator" class="p">Flash test firmware</button></esp-web-tools-install-button>
+<small>Pick the board's UART/serial port (CH340 / CP210x), not the native USB one. If it won't connect: hold BOOT, tap RESET, release BOOT.</small></section>
+
+<section><h2>2 · Test</h2>
+<div class="row"><button id="conn" class="p">Connect serial</button><button id="disc" disabled>Disconnect</button></div>
+<div class="row" style="margin-top:10px">
+<button data-c="s" disabled>I2C scan (OLED)</button>
+<button data-c="m" disabled>Mic meter</button>
+<button data-c="t" disabled>Speaker tone</button>
+<button data-c="d" disabled>TFT colors</button>
+<button data-c="h" disabled>Help</button>
+<button id="copy">Copy log (send this back)</button></div>
+<pre id="log">Not connected.</pre>
+<small>Serial is 115200 baud. The I2C scan takes about a minute and lists every SDA/SCL pair that answers. 0x3C is the OLED.</small></section>
+</main>
+<script>
+const log=document.getElementById('log');let port,writer,reading=false;
+const say=t=>{log.textContent+=t;log.scrollTop=log.scrollHeight};
+const btns=[...document.querySelectorAll('[data-c]')];
+function ui(on){btns.forEach(b=>b.disabled=!on);conn.disabled=on;disc.disabled=!on}
+conn.onclick=async()=>{
+  if(!('serial' in navigator)){log.textContent='Web Serial not supported. Use Chrome or Edge.';return}
+  try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});}catch(e){say('\n'+e.message);return}
+  log.textContent='Connected.\n';ui(true);writer=port.writable.getWriter();reading=true;
+  const dec=new TextDecoderStream();port.readable.pipeTo(dec.writable).catch(()=>{});
+  const r=dec.readable.getReader();
+  (async()=>{try{while(reading){const{value,done}=await r.read();if(done)break;say(value)}}catch(e){}})();
+};
+copy.onclick=async()=>{try{await navigator.clipboard.writeText(log.textContent);copy.textContent='Copied!'}catch(e){const r=document.createRange();r.selectNodeContents(log);getSelection().removeAllRanges();getSelection().addRange(r);copy.textContent='Selected - press Ctrl+C'}setTimeout(()=>copy.textContent='Copy log (send this back)',2500)};
+disc.onclick=async()=>{reading=false;try{writer.releaseLock();await port.close()}catch(e){}ui(false);say('\nDisconnected.\n')};
+btns.forEach(b=>b.onclick=()=>{say('\n> '+b.dataset.c+'\n');writer.write(new TextEncoder().encode(b.dataset.c))});
+</script></body></html>
