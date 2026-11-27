@@ -1,6 +1,10 @@
 // OceanLabz ESP32-S3 AI expansion POC: discover + exercise OLED(I2C), INMP441 mic(I2S), MAX98357A amp(I2S), ST7735 TFT(SPI)
-// Pin defaults come from OceanLabz's XiaoZhi wiring page and are UNVERIFIED for the expansion board.
-// Serial commands: s=I2C scan all pin pairs, m=mic level meter, t=speaker tone, d=TFT color test, h=help
+// Pin defaults follow OceanLabz's official tools/pin_configuration/pins_ai_explorer_s3.h, but their own docs
+// disagree on the TFT (see README), so this firmware can HUNT for the real TFT wiring.
+// Serial commands: s=I2C scan, m=mic meter, t=speaker tone, d=TFT color test, h=help
+//   b = backlight hunt (drives each candidate pin high in turn)
+//   p = TFT pin hunt   (tries every CLK/MOSI/DC/RST/CS assignment; working one is printed ON the screen)
+//   B<pin> = set backlight pin used by p (B-1 = unknown/always on)
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -9,21 +13,17 @@
 #include <Adafruit_ST7735.h>
 
 // ---- adjust after you confirm with the scan / schematic ----
-#define MIC_SCK 2
-#define MIC_WS  1
-#define MIC_SD  42
-#define AMP_BCLK 40
-#define AMP_LRC  41
-#define AMP_DIN  39
-#define TFT_SCK 19
-#define TFT_MOSI 20
-#define TFT_DC 47
-#define TFT_CS 45
-#define TFT_RST 21
-#define TFT_BL 38
+#define MIC_SCK 40
+#define MIC_WS  39
+#define MIC_SD  41
+#define AMP_BCLK 48
+#define AMP_LRC  21
+#define AMP_DIN  47
+// TFT: official header says CLK38 MOSI42 DC1 RST43 CS45 BL44; the OceanLabz PDF says MOSI43 SCLK44 DC38 RST1 CS45 BL42.
+static int TFT_SCK = 38, TFT_MOSI = 42, TFT_DC = 1, TFT_CS = 45, TFT_RST = 43, TFT_BL = 44;
 
 // GPIOs safe to probe on an N16R8 module (26-37 = flash/PSRAM, 0/3/45/46 = strapping, 19/20 = USB)
-static const int CAND[] = {1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42,47,48};
+static const int CAND[] = {1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42,43,44,47,48};
 
 void i2cScan() {
   Serial.println("I2C scan over all candidate SDA/SCL pairs (ignore camera-bus hits)...");
@@ -89,18 +89,74 @@ void toneTest() {
   i2s_driver_uninstall(I2S_NUM_1);
 }
 
-void tftTest() {
-  Serial.println("TFT color cycle (ST7735 128x160).");
-  SPI.begin(TFT_SCK, -1, TFT_MOSI, TFT_CS);
-  static Adafruit_ST7735 tft(&SPI, TFT_CS, TFT_DC, TFT_RST);
-  pinMode(TFT_BL, OUTPUT); digitalWrite(TFT_BL, HIGH);
-  tft.initR(INITR_BLACKTAB);
-  uint16_t cols[] = {ST77XX_RED, ST77XX_GREEN, ST77XX_BLUE, ST77XX_WHITE};
-  for (auto c : cols) { tft.fillScreen(c); delay(500); }
-  tft.fillScreen(ST77XX_BLACK); tft.setCursor(4, 4); tft.setTextColor(ST77XX_WHITE); tft.setTextSize(2); tft.println("POC OK");
+static SPIClass tftSPI(FSPI);
+static const uint16_t COLS[] = {ST77XX_RED, ST77XX_GREEN, ST77XX_BLUE, ST77XX_WHITE};
+
+// draw the 4-colour cycle with the given wiring; msg lines are printed on the panel when it works
+static void tftDraw(int sck, int mosi, int dc, int rst, int cs, int bl, int holdMs, const char* tag) {
+  tftSPI.end();
+  tftSPI.begin(sck, -1, mosi, cs);
+  Adafruit_ST7735* t = new Adafruit_ST7735(&tftSPI, cs, dc, rst);
+  if (bl >= 0) { pinMode(bl, OUTPUT); digitalWrite(bl, HIGH); }
+  t->initR(INITR_BLACKTAB);
+  for (auto c : COLS) { t->fillScreen(c); delay(holdMs); }
+  t->fillScreen(ST77XX_BLACK); t->setTextColor(ST77XX_WHITE); t->setTextSize(1);
+  t->setCursor(2, 2);  t->println(tag);
+  t->printf("\nCLK  %d\nMOSI %d\nDC   %d\nRST  %d\nCS   %d\nBL   %d\n", sck, mosi, dc, rst, cs, bl);
+  delete t;
 }
 
-void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, h=help"); }
+void tftTest() {
+  Serial.printf("TFT color cycle: CLK=%d MOSI=%d DC=%d RST=%d CS=%d BL=%d\n", TFT_SCK, TFT_MOSI, TFT_DC, TFT_RST, TFT_CS, TFT_BL);
+  Serial.flush();
+  tftDraw(TFT_SCK, TFT_MOSI, TFT_DC, TFT_RST, TFT_CS, TFT_BL, 500, "POC OK");
+  Serial.end(); Serial.begin(115200);   // 43/44 are also UART0; take them back for the console
+}
+
+// Backlight hunt: each candidate pin goes HIGH alone for 1.5 s. Note the printed pin when the screen glows.
+void blHunt() {
+  static const int P[] = {1, 38, 42, 43, 44, 45};
+  Serial.println("Backlight hunt: watch the TFT. Each pin is driven HIGH for 1.5s (screen needs 3.3V/GND connected).");
+  for (int pin : P) {
+    Serial.printf("  GPIO%d HIGH now\n", pin); Serial.flush();
+    pinMode(pin, OUTPUT); digitalWrite(pin, HIGH); delay(1500);
+    digitalWrite(pin, LOW); pinMode(pin, INPUT);
+    Serial.end(); Serial.begin(115200);
+  }
+  Serial.println("done. If it never lit: BL may be tied to 3.3V (use B-1), or the header uses another pin.");
+}
+
+// TFT hunt: every assignment of {CLK,MOSI,DC,RST,CS} over the candidate pins. The correct one paints the mapping on the panel.
+void tftHunt() {
+  int pins[6], n = 0;
+  static const int ALL[] = {1, 38, 42, 43, 44, 45};
+  for (int p : ALL) if (p != TFT_BL) pins[n++] = p;      // BL pin excluded when known (B<pin>)
+  Serial.printf("TFT hunt over %d pins (BL=%d). GPIO43/44 are the UART console, so NO per-try logging: watch the panel, it prints the mapping when it works. Hold BOOT to stop.\n", n, TFT_BL); Serial.flush(); pinMode(0, INPUT_PULLUP);
+  int idx[5], used[6] = {0};
+  int count = 0;
+  // iterative permutation of 5 roles over n pins
+  int stack[5]; int depth = 0; stack[0] = -1;
+  while (depth >= 0) {
+    {
+      if (stack[depth] >= 0) used[stack[depth]] = 0;
+      int c = stack[depth] + 1;
+      while (c < n && used[c]) c++;
+      if (c >= n) { depth--; continue; }
+      stack[depth] = c; used[c] = 1; idx[depth] = c;
+      if (depth < 4) { depth++; stack[depth] = -1; continue; }
+      // full assignment
+      count++;
+      int sck = pins[idx[0]], mosi = pins[idx[1]], dc = pins[idx[2]], rst = pins[idx[3]], cs = pins[idx[4]];
+      char tag[24]; snprintf(tag, sizeof tag, "FOUND #%d", count);
+      tftDraw(sck, mosi, dc, rst, cs, TFT_BL, 120, tag);
+      if (digitalRead(0) == LOW) { Serial.end(); Serial.begin(115200); Serial.printf("stopped after #%d (see mapping on the panel)\n", count); return; }
+    }
+  }
+  Serial.end(); Serial.begin(115200);
+  Serial.printf("hunt finished, %d combos tried. Nothing lit => wrong candidate set or no power/GND; check wiring and BL.\n", count);
+}
+
+void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, b=backlight hunt, p=TFT pin hunt (hold BOOT to stop), B<pin>=set BL pin (-1 unknown), h=help"); }
 
 void setup() { Serial.begin(115200); delay(1500); Serial.println("OceanLabz S3 POC"); help(); }
 
@@ -111,6 +167,9 @@ void loop() {
     case 'm': micTest(); break;
     case 't': toneTest(); break;
     case 'd': tftTest(); break;
+    case 'b': blHunt(); break;
+    case 'p': tftHunt(); break;
+    case 'B': { int v = Serial.parseInt(); TFT_BL = v; Serial.printf("BL pin = %d\n", TFT_BL); break; }
     case 'h': help(); break;
   }
 }
