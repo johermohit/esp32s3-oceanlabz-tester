@@ -36,12 +36,22 @@ small{opacity:.7;display:block;margin-top:8px}
 <small>Serial is 115200 baud. The I2C scan takes about a minute and lists every SDA/SCL pair that answers. 0x3C is the OLED.</small></section>
 </main>
 <script>
-const log=document.getElementById('log');let port,writer,reading=false;
+const log=document.getElementById('log');
+const isBrave=!!(navigator.brave&&navigator.brave.isBrave);
+function diag(){
+  const L=['Web Serial (navigator.serial) is missing in this browser.','',
+    'Browser: '+(isBrave?'Brave':navigator.userAgent),'Secure context (https): '+window.isSecureContext,''];
+  if(!window.isSecureContext)L.push('Page is not https or localhost. Open the https link.');
+  else if(isBrave)L.push('Brave ships Web Serial switched OFF.','1. Open brave://flags and search for serial.','2. Set the Web Serial API flag to Enabled.','3. Click Relaunch, then reload this page.','No serial flag listed? Use Microsoft Edge (already on Windows) or Chrome.');
+  else L.push('Use desktop Chrome or Edge (not Firefox, Safari or a phone).');
+  return L.join(String.fromCharCode(10))}
+if(!('serial' in navigator)){window.addEventListener('DOMContentLoaded',()=>{log.textContent=diag();const w=document.createElement('p');w.style.cssText='color:#b42318;font-weight:600';w.textContent='This browser cannot talk to USB serial yet. See the Test box below for the fix.';document.querySelector('p.sub').after(w)})}
+let port,writer,reading=false;
 const say=t=>{log.textContent+=t;log.scrollTop=log.scrollHeight};
 const btns=[...document.querySelectorAll('[data-c]')];
 function ui(on){btns.forEach(b=>b.disabled=!on);conn.disabled=on;disc.disabled=!on}
 conn.onclick=async()=>{
-  if(!('serial' in navigator)){log.textContent='Web Serial not supported. Use Chrome or Edge.';return}
+  if(!('serial' in navigator)){log.textContent=diag();return}
   try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});}catch(e){say('\n'+e.message);return}
   log.textContent='Connected.\n';ui(true);writer=port.writable.getWriter();reading=true;
   const dec=new TextDecoderStream();port.readable.pipeTo(dec.writable).catch(()=>{});
