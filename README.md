@@ -27,9 +27,18 @@ The flasher page loads esp-web-tools from unpkg, so it needs internet. Offline f
 | **Speaker tone** | 2 s of 440 Hz | Silent: wrong pins, speaker not connected, MAX98357A SD pin held low. Keep the speaker away from your ear. |
 | **TFT colors** | Red, green, blue, white, then "POC OK" | Blank: wrong pins or backlight. Wrong colors or offset: change `INITR_BLACKTAB` to `INITR_GREENTAB` or `INITR_REDTAB`. |
 
-## Known uncertainty: the pin map
-There is no published schematic for this board. The default pins in `main.cpp` come from OceanLabz's XiaoZhi tutorial wiring, which describes a hand-wired build and is **not confirmed** to match the expansion board's routing. TFT pins 19/20 are also the S3's native USB pins.
-Use the I2C scan to find the OLED pins. For the rest, continuity-test from each module header pin to the S3 header with a multimeter, then edit the `#define`s and rebuild.
+## Pin map (OceanLabz AI ESP32-S3 Expansion Board v1.2)
+Source: OceanLabz's own guide, https://www.oceanlabz.in/esp32-s3-ai-expansion/ (not their AI Explorer S3 GitHub repo, which is a different board).
+
+| Part | Pins |
+|---|---|
+| TFT (ST7735 128x160, 3.3V) | BL 42, DIN/MOSI 43, CLK 44, D/C 38, CS 45, RST 1 |
+| INMP441 mic | WS 39, SCK 40, SD 41 |
+| MAX98357A amp | LRC 21, BCLK 48, DIN 47 |
+
+**Serial console:** TFT DIN/CLK use GPIO43/44, which are also UART0. This firmware therefore builds with USB CDC on boot, so open the console on the board's *native* USB-C port. If nothing shows, try the other USB-C port. The TFT test will not work while a UART console owns 43/44.
+
+If the screen stays blank, use **Try presets**, or type `T bl clk mosi dc cs rst` (for example `T42 44 43 38 45 1`) then **TFT colors**. A TFT module plugged one or two header positions off will also look blank: check the seating.
 
 ## Rebuild from source
 ```

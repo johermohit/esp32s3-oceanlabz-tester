@@ -13,17 +13,18 @@
 #include <Adafruit_ST7735.h>
 
 // ---- adjust after you confirm with the scan / schematic ----
-#define MIC_SCK 2
-#define MIC_WS  1
-#define MIC_SD  42
-#define AMP_BCLK 40
-#define AMP_LRC  41
-#define AMP_DIN  39
+#define MIC_SCK 40
+#define MIC_WS  39
+#define MIC_SD  41
+#define AMP_BCLK 48
+#define AMP_LRC  21
+#define AMP_DIN  47
 // TFT: official header says CLK38 MOSI42 DC1 RST43 CS45 BL44; the OceanLabz PDF says MOSI43 SCLK44 DC38 RST1 CS45 BL42.
-// Default = OceanLabz XiaoZhi tutorial wiring (BL38 CLK19 DIN20 DC47 CS45 RST21). Change at runtime with T / q / P, no reflash.
-static int TFT_SCK = 19, TFT_MOSI = 20, TFT_DC = 47, TFT_CS = 45, TFT_RST = 21, TFT_BL = 38;
+// Default = OceanLabz ESP32-S3 AI Expansion Board v1.2 guide (oceanlabz.in/esp32-s3-ai-expansion): BL42 DIN(MOSI)43 CLK44 DC38 CS45 RST1.
+// 43/44 are also UART0, so the console must be on the native USB port (CDC on boot). Change at runtime with T / q / P, no reflash.
+static int TFT_SCK = 44, TFT_MOSI = 43, TFT_DC = 38, TFT_CS = 45, TFT_RST = 1, TFT_BL = 42;
 // candidate pins for the b and p hunts (set with P)
-static int HUNT[10] = {38, 19, 20, 47, 45, 21}; static int NHUNT = 6;
+static int HUNT[10] = {42, 43, 44, 38, 45, 1}; static int NHUNT = 6;
 
 // GPIOs safe to probe on an N16R8 module (26-37 = flash/PSRAM, 0/3/45/46 = strapping, 19/20 = USB)
 static const int CAND[] = {1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42,43,44,47,48};
@@ -174,9 +175,9 @@ static void setHunt() {
 void presets() {
   struct P { const char* n; int bl, clk, mosi, dc, cs, rst; };
   static const P L[] = {
-    {"tutorial",     38, 19, 20, 47, 45, 21},
-    {"AIExplorer-h", 44, 38, 42,  1, 45, 43},
-    {"AIExplorer-p", 42, 44, 43, 38, 45,  1},
+    {"expansion-v1.2", 42, 44, 43, 38, 45,  1},
+    {"tutorial-cam",  38, 19, 20, 47, 45, 21},
+    {"AIExplorer-h",  44, 38, 42,  1, 45, 43},
     {"xiaozhi-lcd",  42, 21, 47, 40, 41, 45},
   };
   for (auto& p : L) {
