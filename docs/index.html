@@ -32,9 +32,11 @@ small{opacity:.7;display:block;margin-top:8px}
 <button data-c="d" disabled>TFT colors</button>
 <button data-c="b" disabled>1. Backlight hunt</button>
 <button data-c="p" disabled>2. TFT pin hunt</button>
+<button data-c="q" disabled>Try presets</button>
 <button data-c="B-1" disabled>Set BL unknown (-1)</button>
 <button data-c="h" disabled>Help</button>
 <button id="copy">Copy log (send this back)</button></div>
+<div class="row" style="margin-top:10px"><input id="cmd" placeholder="T38 19 20 47 45 21" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)"><button id="send" disabled>Send</button></div>
 <pre id="log">Not connected.</pre>
 <small>Serial is 115200 baud. The I2C scan takes about a minute and lists every SDA/SCL pair that answers. 0x3C is the OLED.</small></section>
 </main>
@@ -52,7 +54,7 @@ if(!('serial' in navigator)){window.addEventListener('DOMContentLoaded',()=>{log
 let port,writer,reading=false;
 const say=t=>{log.textContent+=t;log.scrollTop=log.scrollHeight};
 const btns=[...document.querySelectorAll('[data-c]')];
-function ui(on){btns.forEach(b=>b.disabled=!on);conn.disabled=on;disc.disabled=!on}
+function ui(on){document.getElementById('send').disabled=!on;btns.forEach(b=>b.disabled=!on);conn.disabled=on;disc.disabled=!on}
 conn.onclick=async()=>{
   if(!('serial' in navigator)){log.textContent=diag();return}
   try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});}catch(e){say('\n'+e.message);return}
@@ -61,6 +63,7 @@ conn.onclick=async()=>{
   const r=dec.readable.getReader();
   (async()=>{try{while(reading){const{value,done}=await r.read();if(done)break;say(value)}}catch(e){}})();
 };
+document.getElementById('send').onclick=()=>{const c=document.getElementById('cmd').value;if(!c)return;say('\n> '+c+'\n');writer.write(new TextEncoder().encode(c+'\n'))};
 copy.onclick=async()=>{try{await navigator.clipboard.writeText(log.textContent);copy.textContent='Copied!'}catch(e){const r=document.createRange();r.selectNodeContents(log);getSelection().removeAllRanges();getSelection().addRange(r);copy.textContent='Selected - press Ctrl+C'}setTimeout(()=>copy.textContent='Copy log (send this back)',2500)};
 disc.onclick=async()=>{reading=false;try{writer.releaseLock();await port.close()}catch(e){}ui(false);say('\nDisconnected.\n')};
 btns.forEach(b=>b.onclick=()=>{say('\n> '+b.dataset.c+'\n');writer.write(new TextEncoder().encode(b.dataset.c))});

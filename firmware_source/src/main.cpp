@@ -13,14 +13,17 @@
 #include <Adafruit_ST7735.h>
 
 // ---- adjust after you confirm with the scan / schematic ----
-#define MIC_SCK 40
-#define MIC_WS  39
-#define MIC_SD  41
-#define AMP_BCLK 48
-#define AMP_LRC  21
-#define AMP_DIN  47
+#define MIC_SCK 2
+#define MIC_WS  1
+#define MIC_SD  42
+#define AMP_BCLK 40
+#define AMP_LRC  41
+#define AMP_DIN  39
 // TFT: official header says CLK38 MOSI42 DC1 RST43 CS45 BL44; the OceanLabz PDF says MOSI43 SCLK44 DC38 RST1 CS45 BL42.
-static int TFT_SCK = 38, TFT_MOSI = 42, TFT_DC = 1, TFT_CS = 45, TFT_RST = 43, TFT_BL = 44;
+// Default = OceanLabz XiaoZhi tutorial wiring (BL38 CLK19 DIN20 DC47 CS45 RST21). Change at runtime with T / q / P, no reflash.
+static int TFT_SCK = 19, TFT_MOSI = 20, TFT_DC = 47, TFT_CS = 45, TFT_RST = 21, TFT_BL = 38;
+// candidate pins for the b and p hunts (set with P)
+static int HUNT[10] = {38, 19, 20, 47, 45, 21}; static int NHUNT = 6;
 
 // GPIOs safe to probe on an N16R8 module (26-37 = flash/PSRAM, 0/3/45/46 = strapping, 19/20 = USB)
 static const int CAND[] = {1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42,43,44,47,48};
@@ -115,9 +118,9 @@ void tftTest() {
 
 // Backlight hunt: each candidate pin goes HIGH alone for 1.5 s. Note the printed pin when the screen glows.
 void blHunt() {
-  static const int P[] = {1, 38, 42, 43, 44, 45};
   Serial.println("Backlight hunt: watch the TFT. Each pin is driven HIGH for 1.5s (screen needs 3.3V/GND connected).");
-  for (int pin : P) {
+  for (int k = 0; k < NHUNT; k++) {
+    int pin = HUNT[k];
     Serial.printf("  GPIO%d HIGH now\n", pin); Serial.flush();
     pinMode(pin, OUTPUT); digitalWrite(pin, HIGH); delay(1500);
     digitalWrite(pin, LOW); pinMode(pin, INPUT);
@@ -128,11 +131,10 @@ void blHunt() {
 
 // TFT hunt: every assignment of {CLK,MOSI,DC,RST,CS} over the candidate pins. The correct one paints the mapping on the panel.
 void tftHunt() {
-  int pins[6], n = 0;
-  static const int ALL[] = {1, 38, 42, 43, 44, 45};
-  for (int p : ALL) if (p != TFT_BL) pins[n++] = p;      // BL pin excluded when known (B<pin>)
+  int pins[10], n = 0;
+  for (int k = 0; k < NHUNT; k++) if (HUNT[k] != TFT_BL) pins[n++] = HUNT[k];      // BL pin excluded when known (B<pin>)
   Serial.printf("TFT hunt over %d pins (BL=%d). GPIO43/44 are the UART console, so NO per-try logging: watch the panel, it prints the mapping when it works. Hold BOOT to stop.\n", n, TFT_BL); Serial.flush(); pinMode(0, INPUT_PULLUP);
-  int idx[5], used[6] = {0};
+  int idx[5], used[10] = {0};
   int count = 0;
   // iterative permutation of 5 roles over n pins
   int stack[5]; int depth = 0; stack[0] = -1;
@@ -156,7 +158,37 @@ void tftHunt() {
   Serial.printf("hunt finished, %d combos tried. Nothing lit => wrong candidate set or no power/GND; check wiring and BL.\n", count);
 }
 
-void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, b=backlight hunt, p=TFT pin hunt (hold BOOT to stop), B<pin>=set BL pin (-1 unknown), h=help"); }
+// T bl clk mosi dc cs rst : set TFT pins then press d.  e.g.  T38 19 20 47 45 21
+static void setTft() {
+  int v[6]; for (int i = 0; i < 6; i++) v[i] = Serial.parseInt();
+  TFT_BL = v[0]; TFT_SCK = v[1]; TFT_MOSI = v[2]; TFT_DC = v[3]; TFT_CS = v[4]; TFT_RST = v[5];
+  Serial.printf("TFT set: BL=%d CLK=%d MOSI=%d DC=%d CS=%d RST=%d (press d to test)\n", v[0], v[1], v[2], v[3], v[4], v[5]);
+}
+// P a b c ... : set the hunt candidate pins (up to 10), terminated by newline
+static void setHunt() {
+  NHUNT = 0;
+  while (NHUNT < 10) { int v = Serial.parseInt(); if (!v && Serial.peek() < 0) break; HUNT[NHUNT++] = v; if (Serial.peek() == '\n' || Serial.peek() < 0) break; }
+  Serial.printf("hunt pins (%d):", NHUNT); for (int i = 0; i < NHUNT; i++) Serial.printf(" %d", HUNT[i]); Serial.println();
+}
+// q: try known presets one by one, each 3 s. Panel prints which preset it was.
+void presets() {
+  struct P { const char* n; int bl, clk, mosi, dc, cs, rst; };
+  static const P L[] = {
+    {"tutorial",     38, 19, 20, 47, 45, 21},
+    {"AIExplorer-h", 44, 38, 42,  1, 45, 43},
+    {"AIExplorer-p", 42, 44, 43, 38, 45,  1},
+    {"xiaozhi-lcd",  42, 21, 47, 40, 41, 45},
+  };
+  for (auto& p : L) {
+    Serial.printf("preset %s: BL=%d CLK=%d MOSI=%d DC=%d CS=%d RST=%d\n", p.n, p.bl, p.clk, p.mosi, p.dc, p.cs, p.rst); Serial.flush();
+    tftDraw(p.clk, p.mosi, p.dc, p.rst, p.cs, p.bl, 300, p.n);
+    delay(2500);
+    Serial.end(); Serial.begin(115200);
+  }
+  Serial.println("presets done. Which one lit the panel? (none => offset/other pins: use P and p)");
+}
+
+void help() { Serial.println("cmds: s=I2C scan, m=mic, t=tone, d=display, b=backlight hunt, p=TFT pin hunt (hold BOOT to stop), B<pin>=set BL pin (-1 unknown), q=try presets, T bl clk mosi dc cs rst=set TFT pins, P pins...=set hunt pins, h=help"); }
 
 void setup() { Serial.begin(115200); delay(1500); Serial.println("OceanLabz S3 POC"); help(); }
 
@@ -167,6 +199,9 @@ void loop() {
     case 'm': micTest(); break;
     case 't': toneTest(); break;
     case 'd': tftTest(); break;
+    case 'q': presets(); break;
+    case 'T': setTft(); break;
+    case 'P': setHunt(); break;
     case 'b': blHunt(); break;
     case 'p': tftHunt(); break;
     case 'B': { int v = Serial.parseInt(); TFT_BL = v; Serial.printf("BL pin = %d\n", TFT_BL); break; }
