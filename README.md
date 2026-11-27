@@ -36,6 +36,8 @@ Source: OceanLabz's own guide, https://www.oceanlabz.in/esp32-s3-ai-expansion/ (
 | INMP441 mic | WS 39, SCK 40, SD 41 |
 | MAX98357A amp | LRC 21, BCLK 48, DIN 47 |
 
+**Wi-Fi monitor (use this while the TFT is on):** after flashing, join the Wi-Fi network `OceanLabz-POC` (no password) and open http://192.168.4.1. It shows the live log and has buttons for every command, and it works while the TFT uses GPIO43/44.
+
 **Serial console:** TFT DIN/CLK use GPIO43/44, which are also UART0. This firmware therefore builds with USB CDC on boot, so open the console on the board's *native* USB-C port. If nothing shows, try the other USB-C port. The TFT test will not work while a UART console owns 43/44.
 
 If the screen stays blank, use **Try presets**, or type `T bl clk mosi dc cs rst` (for example `T42 44 43 38 45 1`) then **TFT colors**. A TFT module plugged one or two header positions off will also look blank: check the seating.
