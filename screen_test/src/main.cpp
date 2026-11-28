@@ -6,6 +6,7 @@
 //                              2 = Adafruit ST7735 BLACKTAB   3 = ST7735 GREENTAB   4 = ST7735 REDTAB
 //                              c = COMMAND PING (display off/on x4: proves CLK/DIN/CS/DC wiring)   B = toggle bit-bang mode
 //                              w = WIRE WALK: sets each signal pin HIGH for 4 s, one at a time (check with a multimeter or LED)
+//                              l = toggle SPI speed 4 MHz / 400 kHz   m = toggle SPI mode 0 / 3 (QDTech driver)
 //                              k = clock demo (adapted from Adafruit_QDTech TFT_Clock)   i = invert colours   h = help
 #include <Arduino.h>
 #include <SPI.h>
@@ -26,6 +27,7 @@ static Adafruit_ST7735 st(&spi, PIN_CS, PIN_DC, PIN_RST);
 static Adafruit_GFX* g = nullptr;
 static const char* gname = "";
 static bool invert = false, clockOn = false;
+static uint32_t g_hz = 4000000;   // l = toggle 4 MHz / 400 kHz
 
 static void bars(Adafruit_GFX& d, const char* title) {
   const uint16_t C[] = {0xF800, 0x07E0, 0x001F, 0xFFFF, 0x0000};
@@ -47,10 +49,10 @@ static void bars(Adafruit_GFX& d, const char* title) {
 static void run(int mode) {
   clockOn = false;
   Serial.printf("\n== mode %d ==\n", mode);
-  if (mode == 1) { qd.begin(4000000); g = &qd; gname = "QDTech S6D02A1"; }
+  if (mode == 1) { qd.begin(g_hz); g = &qd; gname = "QDTech S6D02A1"; }
   else {
     uint8_t tab = mode == 2 ? INITR_BLACKTAB : mode == 3 ? INITR_GREENTAB : INITR_REDTAB;
-    st.setSPISpeed(4000000); st.initR(tab); st.setRotation(0); g = &st;
+    st.setSPISpeed(g_hz); st.initR(tab); st.setRotation(0); g = &st;
     gname = mode == 2 ? "ST7735 BLACKTAB" : mode == 3 ? "ST7735 GREENTAB" : "ST7735 REDTAB";
   }
   Serial.printf("driver: %s. Watch the screen.\n", gname);
@@ -89,7 +91,7 @@ static void clockTick() {
 // c: wiring ping. Sends only DISPLAY OFF / DISPLAY ON. If the picture changes on cue, CLK, DIN, CS and D/C are all fine.
 static void ping() {
   Serial.println("\n== command ping ==");
-  qd.begin(4000000);
+  qd.begin(g_hz);
   for (int i = 0; i < 4; i++) {
     qd.rawCmd(0x28); Serial.println("  DISPLAY OFF sent: screen should go BLANK/white"); delay(1800);
     qd.rawCmd(0x29); Serial.println("  DISPLAY ON sent: noise/picture should come back"); delay(1800);
@@ -118,7 +120,7 @@ static void walk() {
   Serial.println("walk done (BL left high).");
 }
 
-static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  w=wire walk  B=bit-bang on/off  k=clock  i=invert  h=help"); }
+static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  w=wire walk  l=slow SPI  m=SPI mode  B=bit-bang on/off  k=clock  i=invert  h=help"); }
 
 void setup() {
   Serial.begin(115200); delay(1500);
@@ -136,6 +138,8 @@ void loop() {
     if (c >= '1' && c <= '4') run(c - '0');
     else if (c == 'c') ping();
     else if (c == 'w') walk();
+    else if (c == 'l') { g_hz = (g_hz == 4000000) ? 400000 : 4000000; Serial.printf("SPI speed = %u Hz. Press 1 to test.\n", (unsigned)g_hz); }
+    else if (c == 'm') { qd.setMode(qd.mode() == SPI_MODE0 ? SPI_MODE3 : SPI_MODE0); Serial.printf("SPI mode = %d. Press 1 to test.\n", qd.mode() == SPI_MODE3 ? 3 : 0); }
     else if (c == 'B') { qd.setBitBang(!qd.bitBang()); Serial.printf("bit-bang %s (QDTech driver only). Press 1 to test.\n", qd.bitBang() ? "ON" : "OFF"); }
     else if (c == 'k' && g) clockFace();
     else if (c == 'i' && g) { invert = !invert; if (g == &qd) qd.invertDisplay(invert); else st.invertDisplay(invert); Serial.printf("invert=%d\n", invert); }

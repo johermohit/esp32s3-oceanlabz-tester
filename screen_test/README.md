@@ -47,7 +47,8 @@ That means the module is powered and the controller is alive, but our commands a
    - It goes blank and back on cue: CLK, DIN, CS and D/C are fine. The problem is the init or the pixel data. Try `1`, then `2` `3` `4`.
    - Nothing changes: one of CLK (5), DIN (4), CS (2) or D/C (3) is loose or on the wrong pin. Reseat each jumper, check the pin names on the DevKit, and check that the pin on the module is really touching.
 2. Press `w` (wire walk) to test each wire without using the screen. It raises one pin at a time for 4 s and prints which module pin should have 3.3 V. With a multimeter on DC volts, black probe on module GND (pin 8) and red probe on the named module pin: you should read about 3.3 V on that pin and about 0 V on the others. A pin that never reads 3.3 V has a bad or misplaced jumper.
-3. Press `B` (bit-bang mode, no SPI peripheral), then `1`. If that works but normal mode does not, it is an SPI pin problem on the ESP32 side.
+3. If `c` works but `1` brings the noise back, the pixel stream is being corrupted: press `l` (slow SPI, 400 kHz) then `1`; if still noise press `m` (SPI mode 3) then `1`; then `l` again to compare. Keep jumpers short and push each one on firmly.
+4. Press `B` (bit-bang mode, no SPI peripheral), then `1`. If that works but normal mode does not, it is an SPI pin problem on the ESP32 side.
 
 ## Reading the result
 | What happens | Meaning |
