@@ -1,4 +1,4 @@
-# TFT screen test (ESP32-S3 DevKit wired straight to the 1.8" module)
+# TFT screen test (ESP32-S3 CAM DevKit wired straight to the 1.8" module)
 
 Purpose: prove the screen itself works, with no expansion board in the way. Nothing else is tested here.
 
@@ -15,18 +15,18 @@ Signal pins stay 3.3 V logic either way. Check J1 with a multimeter in continuit
 
 ![wiring](wiring.png)
 
-| Module pin | Wire to ESP32-S3 DevKit |
+| Module pin | Wire to ESP32-S3 CAM DevKit |
 |---|---|
-| 1 RST | GPIO13 |
-| 2 CS | GPIO10 |
-| 3 D/C | GPIO9 |
-| 4 DIN | GPIO11 |
-| 5 CLK | GPIO12 |
-| 6 VCC | **5V** if J1 is open (3V3 if J1 is shorted) |
-| 7 BL | 3V3 |
-| 8 GND | GND |
+| 1 RST | GPIO1 (right header, J3) |
+| 2 CS | GPIO2 (J3) |
+| 3 D/C | GPIO42 (J3) |
+| 4 DIN | GPIO41 (J3) |
+| 5 CLK | GPIO40 (J3) |
+| 6 VCC | **5V** (left header, J1) if module jumper J1 is open; 3V3 if shorted |
+| 7 BL | GPIO39 (J3). A 3V3 pin also works. |
+| 8 GND | G (last pin of the right header, J3) |
 
-GPIO9 to GPIO13 sit next to each other on the DevKit's left header (J1), after GPIO3 and GPIO46. Match by the names printed on the DevKit.
+The six GPIO wires go to six neighbouring pins on the right header (GPIO1, 2, 42, 41, 40, 39, just after TX and RX). The CAM DevKit's camera uses GPIO4 to 13 and 15 to 18, so none of those are used and the camera can stay plugged in. Match by the names printed on the DevKit.
 
 ## Flash
 ```bash

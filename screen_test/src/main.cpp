@@ -1,6 +1,7 @@
 // TFT screen test: ESP32-S3 DevKit wired DIRECTLY to the 1.8" QDTech 128x160 module. No expansion board.
-// Pins (all on the DevKit's J1 header, contiguous GPIO9..13):
-//   RST=13  CS=10  D/C=9  DIN(MOSI)=11  CLK(SCK)=12   VCC=3V3   BL=3V3   GND=GND
+// Pins (camera-safe: the CAM DevKit's camera uses GPIO4-13 and 15-18, so none of those are used here).
+// All on the RIGHT header (J3), neighbours: GPIO1, 2, 42, 41, 40, 39.
+//   RST=1  CS=2  D/C=42  DIN(MOSI)=41  CLK(SCK)=40  BL=39   VCC=5V (if module jumper J1 open)   GND=GND
 // Serial (115200, UART port):  1 = QDTech S6D02A1 init (default, from Adafruit_QDTech)
 //                              2 = Adafruit ST7735 BLACKTAB   3 = ST7735 GREENTAB   4 = ST7735 REDTAB
 //                              k = clock demo (adapted from Adafruit_QDTech TFT_Clock)   i = invert colours   h = help
@@ -10,12 +11,12 @@
 #include <Adafruit_ST7735.h>
 #include "QDTechESP.h"
 
-#define PIN_RST 13
-#define PIN_CS  10
-#define PIN_DC   9
-#define PIN_MOSI 11
-#define PIN_SCK  12
-#define PIN_BL   -1     // BL wired to 3V3. If you wire BL to a GPIO (e.g. 14) put the number here.
+#define PIN_RST  1
+#define PIN_CS   2
+#define PIN_DC  42
+#define PIN_MOSI 41
+#define PIN_SCK  40
+#define PIN_BL   39     // driven HIGH. If BL is wired to 3V3 instead, this pin is simply left unconnected.
 
 static SPIClass spi(FSPI);
 static QDTechESP qd(spi, PIN_CS, PIN_DC, PIN_RST);
