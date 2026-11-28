@@ -5,6 +5,7 @@
 // Serial (115200, UART port):  1 = QDTech S6D02A1 init (default, from Adafruit_QDTech)
 //                              2 = Adafruit ST7735 BLACKTAB   3 = ST7735 GREENTAB   4 = ST7735 REDTAB
 //                              c = COMMAND PING (display off/on x4: proves CLK/DIN/CS/DC wiring)   B = toggle bit-bang mode
+//                              w = WIRE WALK: sets each signal pin HIGH for 4 s, one at a time (check with a multimeter or LED)
 //                              k = clock demo (adapted from Adafruit_QDTech TFT_Clock)   i = invert colours   h = help
 #include <Arduino.h>
 #include <SPI.h>
@@ -97,7 +98,27 @@ static void ping() {
   Serial.println("ping done. Did the screen change on cue? YES = command wires OK. NO = a wire to CLK/DIN/CS/D-C is loose or wrong.");
 }
 
-static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  B=bit-bang on/off  k=clock  i=invert  h=help"); }
+// w: wire walk. Raises one signal pin at a time. Put a multimeter (DC volts) between the MODULE pin and GND:
+// you must read ~3.3 V on exactly the module pin named in the log, and ~0 V on the others.
+static void walk() {
+  struct W { int pin; const char* name; };
+  const W L[] = {{PIN_RST, "RST  = module pin 1"}, {PIN_CS, "CS   = module pin 2"}, {PIN_DC, "D/C  = module pin 3"},
+                 {PIN_MOSI, "DIN  = module pin 4"}, {PIN_SCK, "CLK  = module pin 5"}, {PIN_BL, "BL   = module pin 7"}};
+  qd.setBitBang(true);                       // releases the SPI peripheral so the pins are plain GPIO
+  for (auto& w : L) { pinMode(w.pin, OUTPUT); digitalWrite(w.pin, LOW); }
+  Serial.println("\n== wire walk: one pin HIGH at a time, 4 s each ==");
+  for (auto& w : L) {
+    digitalWrite(w.pin, HIGH);
+    Serial.printf("  GPIO%-2d HIGH now -> %s : expect ~3.3 V on that module pin only\n", w.pin, w.name);
+    delay(4000);
+    digitalWrite(w.pin, LOW);
+  }
+  digitalWrite(PIN_BL, HIGH);
+  qd.setBitBang(false);
+  Serial.println("walk done (BL left high).");
+}
+
+static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  w=wire walk  B=bit-bang on/off  k=clock  i=invert  h=help"); }
 
 void setup() {
   Serial.begin(115200); delay(1500);
@@ -114,6 +135,7 @@ void loop() {
     char c = Serial.read();
     if (c >= '1' && c <= '4') run(c - '0');
     else if (c == 'c') ping();
+    else if (c == 'w') walk();
     else if (c == 'B') { qd.setBitBang(!qd.bitBang()); Serial.printf("bit-bang %s (QDTech driver only). Press 1 to test.\n", qd.bitBang() ? "ON" : "OFF"); }
     else if (c == 'k' && g) clockFace();
     else if (c == 'i' && g) { invert = !invert; if (g == &qd) qd.invertDisplay(invert); else st.invertDisplay(invert); Serial.printf("invert=%d\n", invert); }
