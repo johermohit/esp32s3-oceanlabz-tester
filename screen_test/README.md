@@ -41,6 +41,13 @@ The screen fills red, green, blue, white, black (1.2 s each), then draws bars an
 
 Keys in the monitor: `1` QDTech init (default), `2` `3` `4` plain ST7735 init (black, green, red tab), `k` clock demo, `i` invert colours, `h` help.
 
+## If the screen shows coloured noise ("snow")
+That means the module is powered and the controller is alive, but our commands and pixels are not arriving. In the monitor:
+1. Press `c` (command ping). It sends only DISPLAY OFF / ON, four times, 1.8 s apart. Watch the screen.
+   - It goes blank and back on cue: CLK, DIN, CS and D/C are fine. The problem is the init or the pixel data. Try `1`, then `2` `3` `4`.
+   - Nothing changes: one of CLK (5), DIN (4), CS (2) or D/C (3) is loose or on the wrong pin. Reseat each jumper, check the pin names on the DevKit, and check that the pin on the module is really touching.
+2. Press `B` (bit-bang mode, no SPI peripheral), then `1`. If that works but normal mode does not, it is an SPI pin problem on the ESP32 side.
+
 ## Reading the result
 | What happens | Meaning |
 |---|---|

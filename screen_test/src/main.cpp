@@ -4,6 +4,7 @@
 //   RST=1  CS=2  D/C=42  DIN(MOSI)=41  CLK(SCK)=40  BL=39   VCC=5V (if module jumper J1 open)   GND=GND
 // Serial (115200, UART port):  1 = QDTech S6D02A1 init (default, from Adafruit_QDTech)
 //                              2 = Adafruit ST7735 BLACKTAB   3 = ST7735 GREENTAB   4 = ST7735 REDTAB
+//                              c = COMMAND PING (display off/on x4: proves CLK/DIN/CS/DC wiring)   B = toggle bit-bang mode
 //                              k = clock demo (adapted from Adafruit_QDTech TFT_Clock)   i = invert colours   h = help
 #include <Arduino.h>
 #include <SPI.h>
@@ -84,7 +85,19 @@ static void clockTick() {
   g->setCursor(34, 140); g->printf("%02d:%02d:%02d", hh, mm, ss);
 }
 
-static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  k=clock  i=invert  h=help"); }
+// c: wiring ping. Sends only DISPLAY OFF / DISPLAY ON. If the picture changes on cue, CLK, DIN, CS and D/C are all fine.
+static void ping() {
+  Serial.println("\n== command ping ==");
+  qd.begin(4000000);
+  for (int i = 0; i < 4; i++) {
+    qd.rawCmd(0x28); Serial.println("  DISPLAY OFF sent: screen should go BLANK/white"); delay(1800);
+    qd.rawCmd(0x29); Serial.println("  DISPLAY ON sent: noise/picture should come back"); delay(1800);
+  }
+  g = &qd; gname = "QDTech S6D02A1";
+  Serial.println("ping done. Did the screen change on cue? YES = command wires OK. NO = a wire to CLK/DIN/CS/D-C is loose or wrong.");
+}
+
+static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  B=bit-bang on/off  k=clock  i=invert  h=help"); }
 
 void setup() {
   Serial.begin(115200); delay(1500);
@@ -92,6 +105,7 @@ void setup() {
   Serial.printf("pins: RST=%d CS=%d DC=%d DIN=%d CLK=%d BL=%d\n", PIN_RST, PIN_CS, PIN_DC, PIN_MOSI, PIN_SCK, PIN_BL);
   if (PIN_BL >= 0) { pinMode(PIN_BL, OUTPUT); digitalWrite(PIN_BL, HIGH); }
   spi.begin(PIN_SCK, -1, PIN_MOSI, -1);
+  qd.setPins(PIN_SCK, PIN_MOSI);
   help(); run(1);
 }
 
@@ -99,6 +113,8 @@ void loop() {
   if (Serial.available()) {
     char c = Serial.read();
     if (c >= '1' && c <= '4') run(c - '0');
+    else if (c == 'c') ping();
+    else if (c == 'B') { qd.setBitBang(!qd.bitBang()); Serial.printf("bit-bang %s (QDTech driver only). Press 1 to test.\n", qd.bitBang() ? "ON" : "OFF"); }
     else if (c == 'k' && g) clockFace();
     else if (c == 'i' && g) { invert = !invert; if (g == &qd) qd.invertDisplay(invert); else st.invertDisplay(invert); Serial.printf("invert=%d\n", invert); }
     else if (c == 'h') help();

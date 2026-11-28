@@ -11,6 +11,16 @@ class QDTechESP : public Adafruit_GFX {
  public:
   QDTechESP(SPIClass& spi, int8_t cs, int8_t dc, int8_t rst) : Adafruit_GFX(128, 160), _spi(spi), _cs(cs), _dc(dc), _rst(rst) {}
 
+  // Bit-bang mode drives CLK/DIN with plain digitalWrite (no SPI peripheral) to rule out SPI/pin-matrix problems.
+  void setPins(int8_t sck, int8_t mosi) { _sck = sck; _mosi = mosi; }
+  void setBitBang(bool on) {
+    _bb = on;
+    if (on) { _spi.end(); pinMode(_sck, OUTPUT); pinMode(_mosi, OUTPUT); digitalWrite(_sck, LOW); }
+    else _spi.begin(_sck, -1, _mosi, -1);
+  }
+  bool bitBang() const { return _bb; }
+  void rawCmd(uint8_t c) { cmd(c); }     // send one command byte, nothing else (for the wiring ping test)
+
   void begin(uint32_t hz = 4000000) {
     _hz = hz;
     pinMode(_cs, OUTPUT); digitalWrite(_cs, HIGH);
@@ -61,11 +71,13 @@ class QDTechESP : public Adafruit_GFX {
   void invertDisplay(bool i) override { cmd(i ? 0x21 : 0x20); }
 
  private:
-  SPIClass& _spi; int8_t _cs, _dc, _rst; uint32_t _hz = 4000000;
+  SPIClass& _spi; int8_t _cs, _dc, _rst, _sck = -1, _mosi = -1; uint32_t _hz = 4000000; bool _bb = false;
+  void bb(uint8_t b) { for (int i = 7; i >= 0; i--) { digitalWrite(_mosi, (b >> i) & 1); digitalWrite(_sck, HIGH); digitalWrite(_sck, LOW); } }
 
-  void cmd(uint8_t c) { _spi.beginTransaction(SPISettings(_hz, MSBFIRST, SPI_MODE0)); digitalWrite(_dc, LOW); digitalWrite(_cs, LOW); _spi.transfer(c); digitalWrite(_cs, HIGH); _spi.endTransaction(); }
-  void data(uint8_t d) { _spi.beginTransaction(SPISettings(_hz, MSBFIRST, SPI_MODE0)); digitalWrite(_dc, HIGH); digitalWrite(_cs, LOW); _spi.transfer(d); digitalWrite(_cs, HIGH); _spi.endTransaction(); }
+  void cmd(uint8_t c) { if (_bb) { digitalWrite(_dc, LOW); digitalWrite(_cs, LOW); bb(c); digitalWrite(_cs, HIGH); return; } _spi.beginTransaction(SPISettings(_hz, MSBFIRST, SPI_MODE0)); digitalWrite(_dc, LOW); digitalWrite(_cs, LOW); _spi.transfer(c); digitalWrite(_cs, HIGH); _spi.endTransaction(); }
+  void data(uint8_t d) { if (_bb) { digitalWrite(_dc, HIGH); digitalWrite(_cs, LOW); bb(d); digitalWrite(_cs, HIGH); return; } _spi.beginTransaction(SPISettings(_hz, MSBFIRST, SPI_MODE0)); digitalWrite(_dc, HIGH); digitalWrite(_cs, LOW); _spi.transfer(d); digitalWrite(_cs, HIGH); _spi.endTransaction(); }
   void pixels(uint16_t c, uint32_t n) {
+    if (_bb) { digitalWrite(_dc, HIGH); digitalWrite(_cs, LOW); while (n--) { bb(c >> 8); bb(c); } digitalWrite(_cs, HIGH); return; }
     uint8_t buf[256]; for (int i = 0; i < 256; i += 2) { buf[i] = c >> 8; buf[i + 1] = c; }
     _spi.beginTransaction(SPISettings(_hz, MSBFIRST, SPI_MODE0)); digitalWrite(_dc, HIGH); digitalWrite(_cs, LOW);
     while (n) { uint32_t k = n > 128 ? 128 : n; _spi.writeBytes(buf, k * 2); n -= k; }
