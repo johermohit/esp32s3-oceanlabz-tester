@@ -1,59 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 760" width="1100" height="760" font-family="Helvetica,Arial,sans-serif">
-<rect width="1100" height="760" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 820" width="1100" height="820" font-family="Helvetica,Arial,sans-serif">
+<rect width="1100" height="820" fill="#ffffff"/>
 <text x="40" y="44" font-size="26" font-weight="700" fill="#111">Screen test wiring: ESP32-S3 DevKit to 1.8&quot; QDTech TFT module</text>
-<text x="40" y="72" font-size="15" fill="#444">8 female-to-female jumper wires. Unplug USB before wiring. 3.3 V only, never 5 V.</text>
-<rect x="60" y="120" width="270" height="498" rx="12" fill="#eef2f7" stroke="#455a64" stroke-width="2"/>
-<text x="75" y="150" font-size="18" font-weight="700" fill="#263238">ESP32-S3 DevKit</text>
-<text x="75" y="172" font-size="13" fill="#455a64">LEFT header (J1), USB ports at the bottom</text>
-<rect x="770" y="120" width="290" height="498" rx="12" fill="#e3f0ff" stroke="#1a237e" stroke-width="2"/>
-<text x="790" y="150" font-size="18" font-weight="700" fill="#1a237e">1.8&quot; TFT module (QDTech)</text>
-<text x="790" y="172" font-size="13" fill="#455a64">pin numbers as printed on the module</text>
-<path d="M330 190 C 500 190, 600 460, 770 460" fill="none" stroke="#d32f2f" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 244 C 500 244, 600 514, 770 514" fill="none" stroke="#ec407a" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 298 C 500 298, 600 298, 770 298" fill="none" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 352 C 500 352, 600 244, 770 244" fill="none" stroke="#f9a825" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 406 C 500 406, 600 352, 770 352" fill="none" stroke="#1565c0" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 460 C 500 460, 600 406, 770 406" fill="none" stroke="#6a1b9a" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 514 C 500 514, 600 190, 770 190" fill="none" stroke="#00acc1" stroke-width="5" stroke-linecap="round"/>
-<path d="M330 568 C 500 568, 600 568, 770 568" fill="none" stroke="#212121" stroke-width="5" stroke-linecap="round"/>
-<circle cx="330" cy="190" r="9" fill="#d32f2f" stroke="#fff" stroke-width="2"/>
-<text x="308" y="196" font-size="18" font-weight="700" text-anchor="end" fill="#111">3V3</text>
-<text x="308" y="212" font-size="11" text-anchor="end" fill="#666">J1 pin 1</text>
-<circle cx="330" cy="244" r="9" fill="#ec407a" stroke="#fff" stroke-width="2"/>
-<text x="308" y="250" font-size="18" font-weight="700" text-anchor="end" fill="#111">3V3</text>
-<text x="308" y="266" font-size="11" text-anchor="end" fill="#666">J1 pin 2</text>
-<circle cx="330" cy="298" r="9" fill="#2e7d32" stroke="#fff" stroke-width="2"/>
-<text x="308" y="304" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO9</text>
-<circle cx="330" cy="352" r="9" fill="#f9a825" stroke="#fff" stroke-width="2"/>
-<text x="308" y="358" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO10</text>
-<circle cx="330" cy="406" r="9" fill="#1565c0" stroke="#fff" stroke-width="2"/>
-<text x="308" y="412" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO11</text>
-<circle cx="330" cy="460" r="9" fill="#6a1b9a" stroke="#fff" stroke-width="2"/>
-<text x="308" y="466" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO12</text>
-<circle cx="330" cy="514" r="9" fill="#00acc1" stroke="#fff" stroke-width="2"/>
-<text x="308" y="520" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO13</text>
-<circle cx="330" cy="568" r="9" fill="#212121" stroke="#fff" stroke-width="2"/>
-<text x="308" y="574" font-size="18" font-weight="700" text-anchor="end" fill="#111">GND</text>
-<text x="308" y="590" font-size="11" text-anchor="end" fill="#666">J1 bottom 'G'</text>
-<circle cx="770" cy="190" r="9" fill="#00acc1" stroke="#fff" stroke-width="2"/>
-<text x="792" y="196" font-size="18" font-weight="700" fill="#111">1  RST</text>
-<circle cx="770" cy="244" r="9" fill="#f9a825" stroke="#fff" stroke-width="2"/>
-<text x="792" y="250" font-size="18" font-weight="700" fill="#111">2  CS</text>
-<circle cx="770" cy="298" r="9" fill="#2e7d32" stroke="#fff" stroke-width="2"/>
-<text x="792" y="304" font-size="18" font-weight="700" fill="#111">3  D/C</text>
-<circle cx="770" cy="352" r="9" fill="#1565c0" stroke="#fff" stroke-width="2"/>
-<text x="792" y="358" font-size="18" font-weight="700" fill="#111">4  DIN</text>
-<circle cx="770" cy="406" r="9" fill="#6a1b9a" stroke="#fff" stroke-width="2"/>
-<text x="792" y="412" font-size="18" font-weight="700" fill="#111">5  CLK</text>
-<circle cx="770" cy="460" r="9" fill="#d32f2f" stroke="#fff" stroke-width="2"/>
-<text x="792" y="466" font-size="18" font-weight="700" fill="#111">6  VCC</text>
-<circle cx="770" cy="514" r="9" fill="#ec407a" stroke="#fff" stroke-width="2"/>
-<text x="792" y="520" font-size="18" font-weight="700" fill="#111">7  BL</text>
-<circle cx="770" cy="568" r="9" fill="#212121" stroke="#fff" stroke-width="2"/>
-<text x="792" y="574" font-size="18" font-weight="700" fill="#111">8  GND</text>
-<text x="40" y="648" font-size="14" fill="#222">&#8226; Order of the 8 module pins, top to bottom: 1 RST, 2 CS, 3 D/C, 4 DIN, 5 CLK, 6 VCC, 7 BL, 8 GND.</text>
-<text x="40" y="672" font-size="14" fill="#222">&#8226; BL goes to the second 3V3 pin so the backlight is always on (no GPIO needed). VCC and BL both = 3V3.</text>
-<text x="40" y="696" font-size="14" fill="#222">&#8226; GPIO9 to GPIO13 are five neighbouring pins on J1 (just below GPIO3 and GPIO46).</text>
-<text x="40" y="720" font-size="14" fill="#222">&#8226; Do not use GPIO43/44 (UART console) or GPIO19/20 (USB) for this test.</text>
-<text x="40" y="744" font-size="14" fill="#222">&#8226; Check the names printed on YOUR module match the order above before powering it.</text>
+<text x="40" y="72" font-size="15" fill="#444">8 female-to-female jumper wires. Unplug USB before wiring.</text>
+<rect x="40" y="90" width="1020" height="82" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+<text x="58" y="118" font-size="16" font-weight="700" fill="#bf360c">FIRST check solder jumper J1 on the BACK of the module (next to the small regulator):</text>
+<text x="58" y="142" font-size="15" fill="#222">J1 OPEN (two separate pads): VCC must get 5 V. Use this diagram. With only 3.3 V the regulator starves the screen.</text>
+<text x="58" y="162" font-size="15" fill="#222">J1 SHORTED (solder blob joins the pads): VCC must get 3.3 V. Wire VCC to 3V3 instead and NEVER use 5 V.</text>
+<rect x="60" y="190" width="270" height="488" rx="12" fill="#eef2f7" stroke="#455a64" stroke-width="2"/>
+<text x="75" y="220" font-size="18" font-weight="700" fill="#263238">ESP32-S3 DevKit</text>
+<text x="75" y="242" font-size="13" fill="#455a64">LEFT header (J1), USB ports at the bottom</text>
+<rect x="770" y="190" width="290" height="488" rx="12" fill="#e3f0ff" stroke="#1a237e" stroke-width="2"/>
+<text x="790" y="220" font-size="18" font-weight="700" fill="#1a237e">1.8&quot; TFT module (QDTech)</text>
+<text x="790" y="242" font-size="13" fill="#455a64">pin numbers as printed on the module</text>
+<path d="M330 250 C 500 250, 600 574, 770 574" fill="none" stroke="#ec407a" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 304 C 500 304, 600 358, 770 358" fill="none" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 358 C 500 358, 600 304, 770 304" fill="none" stroke="#f9a825" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 412 C 500 412, 600 412, 770 412" fill="none" stroke="#1565c0" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 466 C 500 466, 600 466, 770 466" fill="none" stroke="#6a1b9a" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 520 C 500 520, 600 250, 770 250" fill="none" stroke="#00acc1" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 574 C 500 574, 600 520, 770 520" fill="none" stroke="#d32f2f" stroke-width="5" stroke-linecap="round"/>
+<path d="M330 628 C 500 628, 600 628, 770 628" fill="none" stroke="#212121" stroke-width="5" stroke-linecap="round"/>
+<circle cx="330" cy="250" r="9" fill="#ec407a" stroke="#fff" stroke-width="2"/>
+<text x="308" y="256" font-size="18" font-weight="700" text-anchor="end" fill="#111">3V3</text>
+<text x="308" y="272" font-size="11" text-anchor="end" fill="#666">J1 pin 1 or 2</text>
+<circle cx="330" cy="304" r="9" fill="#2e7d32" stroke="#fff" stroke-width="2"/>
+<text x="308" y="310" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO9</text>
+<circle cx="330" cy="358" r="9" fill="#f9a825" stroke="#fff" stroke-width="2"/>
+<text x="308" y="364" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO10</text>
+<circle cx="330" cy="412" r="9" fill="#1565c0" stroke="#fff" stroke-width="2"/>
+<text x="308" y="418" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO11</text>
+<circle cx="330" cy="466" r="9" fill="#6a1b9a" stroke="#fff" stroke-width="2"/>
+<text x="308" y="472" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO12</text>
+<circle cx="330" cy="520" r="9" fill="#00acc1" stroke="#fff" stroke-width="2"/>
+<text x="308" y="526" font-size="18" font-weight="700" text-anchor="end" fill="#111">GPIO13</text>
+<circle cx="330" cy="574" r="9" fill="#d32f2f" stroke="#fff" stroke-width="2"/>
+<text x="308" y="580" font-size="18" font-weight="700" text-anchor="end" fill="#111">5V</text>
+<text x="308" y="596" font-size="11" text-anchor="end" fill="#666">J1, 2nd from bottom</text>
+<circle cx="330" cy="628" r="9" fill="#212121" stroke="#fff" stroke-width="2"/>
+<text x="308" y="634" font-size="18" font-weight="700" text-anchor="end" fill="#111">GND</text>
+<text x="308" y="650" font-size="11" text-anchor="end" fill="#666">J1 bottom 'G'</text>
+<circle cx="770" cy="250" r="9" fill="#00acc1" stroke="#fff" stroke-width="2"/>
+<text x="792" y="256" font-size="18" font-weight="700" fill="#111">1  RST</text>
+<circle cx="770" cy="304" r="9" fill="#f9a825" stroke="#fff" stroke-width="2"/>
+<text x="792" y="310" font-size="18" font-weight="700" fill="#111">2  CS</text>
+<circle cx="770" cy="358" r="9" fill="#2e7d32" stroke="#fff" stroke-width="2"/>
+<text x="792" y="364" font-size="18" font-weight="700" fill="#111">3  D/C</text>
+<circle cx="770" cy="412" r="9" fill="#1565c0" stroke="#fff" stroke-width="2"/>
+<text x="792" y="418" font-size="18" font-weight="700" fill="#111">4  DIN</text>
+<circle cx="770" cy="466" r="9" fill="#6a1b9a" stroke="#fff" stroke-width="2"/>
+<text x="792" y="472" font-size="18" font-weight="700" fill="#111">5  CLK</text>
+<circle cx="770" cy="520" r="9" fill="#d32f2f" stroke="#fff" stroke-width="2"/>
+<text x="792" y="526" font-size="18" font-weight="700" fill="#111">6  VCC</text>
+<circle cx="770" cy="574" r="9" fill="#ec407a" stroke="#fff" stroke-width="2"/>
+<text x="792" y="580" font-size="18" font-weight="700" fill="#111">7  BL</text>
+<circle cx="770" cy="628" r="9" fill="#212121" stroke="#fff" stroke-width="2"/>
+<text x="792" y="634" font-size="18" font-weight="700" fill="#111">8  GND</text>
+<text x="40" y="708" font-size="14" fill="#222">&#8226; Module pins top to bottom: 1 RST, 2 CS, 3 D/C, 4 DIN, 5 CLK, 6 VCC, 7 BL, 8 GND.</text>
+<text x="40" y="732" font-size="14" fill="#222">&#8226; BL goes to a 3V3 pin so the backlight is always on (no GPIO needed). Logic signals are 3.3 V either way.</text>
+<text x="40" y="756" font-size="14" fill="#222">&#8226; GPIO9 to GPIO13 are five neighbouring pins on J1 (just below GPIO3 and GPIO46). Match by the names on the DevKit.</text>
+<text x="40" y="780" font-size="14" fill="#222">&#8226; Do not use GPIO43/44 (UART console) or GPIO19/20 (USB) for this test.</text>
 </svg>
