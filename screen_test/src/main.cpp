@@ -14,12 +14,23 @@
 #include <Adafruit_ST7735.h>
 #include "QDTechESP.h"
 
+#ifdef KIT
+// Screen plugged into the OceanLabz AI ESP32-S3 Expansion Board v1.2 (pins from oceanlabz.in/esp32-s3-ai-expansion).
+// GPIO43/44 are also the UART console, so this build uses no serial at all: it just loops the test on the screen.
+#define PIN_RST  1
+#define PIN_CS  45
+#define PIN_DC  38
+#define PIN_MOSI 43
+#define PIN_SCK  44
+#define PIN_BL   42
+#else
 #define PIN_RST  1
 #define PIN_CS   2
 #define PIN_DC  42
 #define PIN_MOSI 41
 #define PIN_SCK  40
 #define PIN_BL   39     // driven HIGH. If BL is wired to 3V3 instead, this pin is simply left unconnected.
+#endif
 
 static SPIClass spi(FSPI);
 static QDTechESP qd(spi, PIN_CS, PIN_DC, PIN_RST);
@@ -122,6 +133,18 @@ static void walk() {
 
 static void help() { Serial.println("keys: 1=QDTech init  2/3/4=ST7735 black/green/red tab  c=command ping  w=wire walk  l=slow SPI  m=SPI mode  B=bit-bang on/off  k=clock  i=invert  h=help"); }
 
+#ifdef KIT
+// Kit build: no typing needed. Loops: QDTech driver, then ST7735 black/green/red tab, each labelled on screen.
+void setup() {
+  pinMode(PIN_BL, OUTPUT); digitalWrite(PIN_BL, HIGH);
+  spi.begin(PIN_SCK, -1, PIN_MOSI, -1);
+  qd.setPins(PIN_SCK, PIN_MOSI);
+  g_hz = 1000000;
+}
+void loop() {
+  for (int m = 1; m <= 4; m++) { run(m); delay(4000); }
+}
+#else
 void setup() {
   Serial.begin(115200); delay(1500);
   Serial.println("\nTFT screen test (ESP32-S3 DevKit -> QDTech 1.8\" module)");
@@ -147,3 +170,4 @@ void loop() {
   }
   if (clockOn) clockTick();
 }
+#endif
